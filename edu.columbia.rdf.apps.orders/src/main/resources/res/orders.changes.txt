@@ -1,0 +1,20 @@
+VERSION 4 - 12/22/15
+
+  * Improved inventory and error detection.
+  
+  
+VERSION 3 - 01/27/15
+
+  * Fix parsing bug.
+  
+  
+VERSION 2 - 12/19/14
+
+  * Support for BED editing.
+  * Switched to zero based support in BED file read/write.
+  * Support for folders and sub-folders in sample view.
+  
+  
+VERSION 1 - 12/17/14
+
+  * Allow users to browse peak data.
