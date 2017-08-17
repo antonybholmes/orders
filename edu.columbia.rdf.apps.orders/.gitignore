@@ -1,8 +1,0 @@
-bin
-.metadata
-tmp
-cache
-/samples.xlsx
-/test_orders.csv
-/target/
-/excel_paths.txt
