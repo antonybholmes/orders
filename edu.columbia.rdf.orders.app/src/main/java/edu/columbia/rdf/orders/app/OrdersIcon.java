@@ -28,6 +28,6 @@ public class OrdersIcon extends ModernApplicationIcon {
 	 * Instantiates a new HTS view icon.
 	 */
 	public OrdersIcon() {
-		super("O", "r", ColorTheme.BLUE);
+		super("O", "d", ColorTheme.BLUE);
 	}
 }

@@ -27,6 +27,7 @@ import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.jebtk.bioinformatics.ui.Bioinformatics;
 import org.jebtk.core.collections.ArrayListCreator;
 import org.jebtk.core.collections.CollectionUtils;
 import org.jebtk.core.collections.DefaultHashMap;
@@ -36,7 +37,6 @@ import org.jebtk.core.io.PathUtils;
 import org.jebtk.core.io.Temp;
 import org.jebtk.core.sys.ExternalProcess;
 import org.jebtk.core.text.TextUtils;
-import org.jebtk.bioinformatics.ui.Bioinformatics;
 import org.jebtk.math.external.microsoft.Excel;
 import org.jebtk.math.matrix.AnnotationType;
 import org.jebtk.math.ui.external.microsoft.ExcelUI;
@@ -57,9 +57,7 @@ import org.jebtk.modern.help.ModernAboutDialog;
 import org.jebtk.modern.io.OpenRibbonPanel;
 import org.jebtk.modern.io.RecentFilesService;
 import org.jebtk.modern.io.SaveAsRibbonPanel;
-import org.jebtk.modern.preview.PreviewPanel;
 import org.jebtk.modern.preview.PreviewTablePanel;
-import org.jebtk.modern.preview.PreviewTabsPanel;
 import org.jebtk.modern.ribbon.QuickAccessButton;
 import org.jebtk.modern.ribbon.RibbonLargeButton;
 import org.jebtk.modern.ribbon.RibbonMenuItem;
@@ -85,19 +83,21 @@ public class MainOrdersWindow extends ModernRibbonWindow implements ModernClickL
 	private Path mFile = null;
 
 
-	private OpenRibbonPanel openPanel = new OpenRibbonPanel();
+	private OpenRibbonPanel mOpenPanel = new OpenRibbonPanel();
 
-	private SaveAsRibbonPanel saveAsPanel = new SaveAsRibbonPanel();
+	private SaveAsRibbonPanel mSaveAsPanel = new SaveAsRibbonPanel();
 
-	private PreviewPanel previewPanel = new PreviewTabsPanel();
+	//private PreviewPanel mPreviewPanel = new PreviewTabsPanel();
 
-	private ModernDataModel model;
+	private ModernDataModel mModel;
 
 	private Map<String, Item> mInventory;
 
 	private ZoomModel mZoomModel = new ZoomModel();
 
 	private List<String> mExcelPaths;
+
+	private PreviewTablePanel mPreviewPanel;
 
 
 	public MainOrdersWindow(GuiAppInfo info, List<String> excelPaths) throws IOException {
@@ -113,16 +113,24 @@ public class MainOrdersWindow extends ModernRibbonWindow implements ModernClickL
 
 		loadLabStocks();
 	}
+	
+	public MainOrdersWindow(GuiAppInfo info, 
+			List<String> excelPaths,
+			Path file) throws IOException, InvalidFormatException {
+		this(info, excelPaths);
+		
+		open(file);
+	}
 
 	public final void createRibbon() {
 		RibbonMenuItem menuItem;
 
 		menuItem = new RibbonMenuItem(UI.MENU_OPEN);
-		getRibbonMenu().addTabbedMenuItem(menuItem, openPanel);
+		getRibbonMenu().addTabbedMenuItem(menuItem, mOpenPanel);
 
 
 		menuItem = new RibbonMenuItem(UI.MENU_SAVE_AS);
-		getRibbonMenu().addTabbedMenuItem(menuItem, saveAsPanel);
+		getRibbonMenu().addTabbedMenuItem(menuItem, mSaveAsPanel);
 		
 		getRibbonMenu().addDefaultItems(getAppInfo());
 
@@ -151,7 +159,7 @@ public class MainOrdersWindow extends ModernRibbonWindow implements ModernClickL
 	}
 
 	public final void createUi() {
-		setBody(previewPanel);
+		//setCard(mPreviewPanel);
 		
 		getStatusBar().addRight(new ModernStatusZoomSlider(mZoomModel));
 	}
@@ -168,7 +176,7 @@ public class MainOrdersWindow extends ModernRibbonWindow implements ModernClickL
 			}
 		} else if (e.getMessage().equals(OpenRibbonPanel.FILE_SELECTED)) {
 			try {
-				open(openPanel.getSelectedFile());
+				open(mOpenPanel.getSelectedFile());
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			} catch (InvalidFormatException e1) {
@@ -176,7 +184,7 @@ public class MainOrdersWindow extends ModernRibbonWindow implements ModernClickL
 			}
 		} else if (e.getMessage().equals(OpenRibbonPanel.DIRECTORY_SELECTED)) {
 			try {
-				browseForFile(openPanel.getSelectedDirectory());
+				browseForFile(mOpenPanel.getSelectedDirectory());
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			} catch (InvalidFormatException e1) {
@@ -190,14 +198,14 @@ public class MainOrdersWindow extends ModernRibbonWindow implements ModernClickL
 			}
 		} else if (e.getMessage().equals(SaveAsRibbonPanel.DIRECTORY_SELECTED)) {
 			try {
-				export(saveAsPanel.getSelectedDirectory());
+				export(mSaveAsPanel.getSelectedDirectory());
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
 		} else if (e.getMessage().equals("Create Report")) {
 			try {
 				createReport();
-			} catch (IOException | ParseException | InvalidFormatException e1) {
+			} catch (IOException | InvalidFormatException | ParseException e1) {
 				e1.printStackTrace();
 			}
 		} else if (e.getMessage().equals(UI.MENU_ABOUT)) {
@@ -222,18 +230,20 @@ public class MainOrdersWindow extends ModernRibbonWindow implements ModernClickL
 			return;
 		}
 
-		model = Bioinformatics.getModel(file, 
+		mModel = Bioinformatics.getModel(file, 
 				true,
 				TextUtils.emptyList(),
 				0, 
 				TextUtils.TAB_DELIMITER,
 				AnnotationType.TEXT);
 
-		previewPanel.clear();
+		//mPreviewPanel.clear();
 
 		String name = PathUtils.toString(file.toAbsolutePath());
 
-		previewPanel.addPreview(name, new PreviewTablePanel(model, mZoomModel));
+		mPreviewPanel = new PreviewTablePanel(mModel, mZoomModel);
+		
+		setCard(mPreviewPanel);
 
 		mFile = file;
 
@@ -247,21 +257,18 @@ public class MainOrdersWindow extends ModernRibbonWindow implements ModernClickL
 	}
 
 	private void export(Path pwd) throws IOException {
-		PreviewTablePanel previewTablePanel = 
-				(PreviewTablePanel)previewPanel.getSelectedPreview();
-
-		if (previewTablePanel == null) {
+		if (mPreviewPanel == null) {
 			return;
 		}
-
-		ModernDataModel model = previewTablePanel.getTable().getModel();
+		
+		ModernDataModel model = mPreviewPanel.getTable().getModel();
 
 		ExcelUI.saveXlsxFileDialog(this, 
 				model, 
 				pwd);
 	}
 
-	private void createReport() throws IOException, ParseException, InvalidFormatException {
+	private void createReport() throws IOException, InvalidFormatException, ParseException {
 		if (mFile == null) {
 			ModernMessageDialog.createDialog(this,
 					getAppInfo().getName(),
@@ -271,14 +278,11 @@ public class MainOrdersWindow extends ModernRibbonWindow implements ModernClickL
 			return;
 		}
 
-		PreviewTablePanel previewTablePanel = 
-				(PreviewTablePanel)previewPanel.getSelectedPreview();
-
-		if (previewTablePanel == null) {
+		if (mPreviewPanel == null) {
 			return;
 		}
 
-		ModernDataModel model = previewTablePanel.getTable().getModel();
+		ModernDataModel model = mPreviewPanel.getTable().getModel();
 
 		List<Order> orders = new ArrayList<Order>();
 		
@@ -369,7 +373,8 @@ public class MainOrdersWindow extends ModernRibbonWindow implements ModernClickL
 		Map<String, Boolean> duplicateMap = new HashMap<String, Boolean>();
 
 		for (Order order : orders) {
-			duplicateMap.put(order.getCatalog(), duplicateMap.containsKey(order.getCatalog()));
+			duplicateMap.put(order.getCatalog(), 
+					duplicateMap.containsKey(order.getCatalog()));
 		}
 
 		//List<Order> labStocks = processByType(orders, "Lab Stock");
@@ -688,8 +693,14 @@ public class MainOrdersWindow extends ModernRibbonWindow implements ModernClickL
 				TextUtils.TAB_DELIMITER,
 				AnnotationType.TEXT);
 
-		previewPanel.addPreview(PathUtils.toString(file.toAbsolutePath()), 
-				new PreviewTablePanel(model, mZoomModel));
+		//mPreviewPanel.addPreview(PathUtils.toString(file.toAbsolutePath()), 
+		//		new PreviewTablePanel(model, mZoomModel));
+		
+		MainOrdersWindow window = new MainOrdersWindow(getAppInfo(), 
+				this.mExcelPaths,
+				excelFile);
+		
+		window.setVisible(true);
 
 		return excelFile;
 	}

@@ -2,9 +2,9 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>edu.columbia.rdf.apps</groupId>
-	<artifactId>edu.columbia.rdf.apps.orders</artifactId>
+	<artifactId>edu.columbia.rdf.orders.app</artifactId>
 	<version>1.0.0</version>
-	<name>edu.columbia.rdf.apps.orders</name>
+	<name>edu.columbia.rdf.orders.app</name>
 	<description>Quartzy order processing</description>
 	<build>
 		<plugins>
@@ -32,7 +32,7 @@
 							<transformers>
 								<transformer
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>edu.columbia.rdf.apps.orders.MainOrders</mainClass>
+									<mainClass>edu.columbia.rdf.orders.app.MainOrders</mainClass>
 								</transformer>
 							</transformers>
 						</configuration>
@@ -57,7 +57,7 @@
 					<executable>java</executable>
 					<arguments>
 						<argument>-jar</argument>
-						<argument>target/edu.columbia.rdf.apps.orders.jar</argument>
+						<argument>target/edu.columbia.rdf.orders.app.jar</argument>
 					</arguments>
 				</configuration>
 			</plugin>
