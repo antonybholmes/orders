@@ -38,7 +38,7 @@ import org.jebtk.core.io.Temp;
 import org.jebtk.core.sys.ExternalProcess;
 import org.jebtk.core.text.TextUtils;
 import org.jebtk.math.external.microsoft.Excel;
-import org.jebtk.math.matrix.AnnotationType;
+import org.jebtk.math.matrix.MatrixType;
 import org.jebtk.math.ui.external.microsoft.ExcelUI;
 import org.jebtk.modern.UI;
 import org.jebtk.modern.UIService;
@@ -235,7 +235,7 @@ public class MainOrdersWindow extends ModernRibbonWindow implements ModernClickL
 				TextUtils.emptyList(),
 				0, 
 				TextUtils.TAB_DELIMITER,
-				AnnotationType.TEXT);
+				MatrixType.TEXT);
 
 		//mPreviewPanel.clear();
 
@@ -518,7 +518,7 @@ public class MainOrdersWindow extends ModernRibbonWindow implements ModernClickL
 				TextUtils.emptyList(),
 				0, 
 				TextUtils.TAB_DELIMITER,
-				AnnotationType.TEXT);
+				MatrixType.TEXT);
 
 
 		XSSFWorkbook workbook = new XSSFWorkbook();
@@ -691,7 +691,7 @@ public class MainOrdersWindow extends ModernRibbonWindow implements ModernClickL
 				TextUtils.emptyList(),
 				0, 
 				TextUtils.TAB_DELIMITER,
-				AnnotationType.TEXT);
+				MatrixType.TEXT);
 
 		//mPreviewPanel.addPreview(PathUtils.toString(file.toAbsolutePath()), 
 		//		new PreviewTablePanel(model, mZoomModel));
@@ -772,11 +772,7 @@ public class MainOrdersWindow extends ModernRibbonWindow implements ModernClickL
 	}
 
 	private static int parseQuantity(String text) {
-		try {
-			return TextUtils.parseInt(text);
-		} catch (ParseException e) {
-			return 0;
-		}
+		return TextUtils.parseInt(text);
 	}
 
 	private List<Order> sortOrdersByVendor(List<Order> orders) {
