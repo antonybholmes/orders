@@ -5,7 +5,7 @@ import java.util.Date;
 public class Order extends Item {
 	private String mType;
 	private double mUnitPrice;
-	private int mQuantity;
+	private double mQuantity;
 	private double mTotal;
 	private String mFrom;
 	private double mShipping;
@@ -20,7 +20,7 @@ public class Order extends Item {
 			String verifiedType,
 			String unitSize,
 			double unitPrice, 
-			int quantity, 
+			double quantity, 
 			double total,
 			double shipping,
 			String from,
@@ -50,7 +50,7 @@ public class Order extends Item {
 		return mUnitPrice;
 	}
 
-	public int getQuantity() {
+	public double getQuantity() {
 		return mQuantity;
 	}
 

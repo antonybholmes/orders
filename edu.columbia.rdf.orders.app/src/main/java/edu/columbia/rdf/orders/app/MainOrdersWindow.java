@@ -19,6 +19,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
@@ -291,9 +292,9 @@ public class MainOrdersWindow extends ModernRibbonWindow implements ModernClickL
 		SimpleDateFormat sdf = new SimpleDateFormat("M/dd/yy");
 		
 		for (int i = 1; i < model.getRowCount(); ++i) {
-			String catalog = model.getValueAsString(i, "Catalog");
+			String catalog = parseText(model, i, "Catalog");
 
-			String type = model.getValueAsString(i, "Type");
+			String type = parseText(model, i, "Type");
 			
 			Color color = Color.BLACK;
 
@@ -318,31 +319,29 @@ public class MainOrdersWindow extends ModernRibbonWindow implements ModernClickL
 			//	type = "Type wrong: should be " + checkedType;
 			//}
 
-			System.err.println("i " + i + " " + model.getValueAsString(i, "Name"));
 
-
-			String from = model.getValueAsString(i, "From");
+			String from = parseText(model, i, "From");
 			
 			if (TextUtils.isNullOrEmpty(from)) {
-				from = model.getValueAsString(i, "Requested By");
+				from = parseText(model, i, "Requested By");
 			}
 			
 			if (TextUtils.isNullOrEmpty(from)) {
 				from = TextUtils.EMPTY_STRING;
 			}
 
-			Order order = new Order(model.getValueAsString(i, "Name"),
-					model.getValueAsString(i, "Vendor"),
+			Order order = new Order(parseText(model, i, "Name"),
+					parseText(model, i, "Vendor"),
 					catalog,
 					type,
 					type,
-					model.getValueAsString(i, "Unit Size"),
+					parseText(model, i, "Unit Size"),
 					parseCost(model, i, "Unit Price"),
 					parseQuantity(model, i, "Quantity", "Qty"),
 					parseCost(model, i, "Total Price"),
 					parseCost(model, i, "S&H", "Shipping & Handling"),
 					from,
-					sdf.parse(model.getValueAsString(i, "Date Submitted")));
+					sdf.parse(parseText(model, i, "Date Submitted", "Date Requested")));
 
 			orders.add(order);
 			
@@ -489,7 +488,7 @@ public class MainOrdersWindow extends ModernRibbonWindow implements ModernClickL
 		writer.write(TextUtils.TAB_DELIMITER);
 		writer.write(Double.toString(order.getUnitPrice()));
 		writer.write(TextUtils.TAB_DELIMITER);
-		writer.write(Integer.toString(order.getQuantity()));
+		writer.write(Double.toString(order.getQuantity()));
 		writer.write(TextUtils.TAB_DELIMITER);
 		writer.write(Double.toString(order.getTotal()));
 		writer.write(TextUtils.TAB_DELIMITER);
@@ -585,10 +584,10 @@ public class MainOrdersWindow extends ModernRibbonWindow implements ModernClickL
 		
 		XSSFCellStyle headerStyle = workbook.createCellStyle();
 		headerStyle.setFont(boldFont);
-		headerStyle.setBorderBottom(XSSFCellStyle.BORDER_THIN);
-		headerStyle.setBorderTop(XSSFCellStyle.BORDER_THIN);
-		headerStyle.setBorderRight(XSSFCellStyle.BORDER_THIN);
-		headerStyle.setBorderLeft(XSSFCellStyle.BORDER_THIN);
+		headerStyle.setBorderBottom(BorderStyle.THIN);
+		headerStyle.setBorderTop(BorderStyle.THIN);
+		headerStyle.setBorderRight(BorderStyle.THIN);
+		headerStyle.setBorderLeft(BorderStyle.THIN);
 		
 		row = (XSSFRow)sheet.createRow(r++);
 
@@ -626,23 +625,25 @@ public class MainOrdersWindow extends ModernRibbonWindow implements ModernClickL
 			defaultStyle.setFont(font);
 			
 			// Add a border
-			defaultStyle.setBorderBottom(XSSFCellStyle.BORDER_THIN);
-			defaultStyle.setBorderTop(XSSFCellStyle.BORDER_THIN);
-			defaultStyle.setBorderRight(XSSFCellStyle.BORDER_THIN);
-			defaultStyle.setBorderLeft(XSSFCellStyle.BORDER_THIN);
+			defaultStyle.setBorderBottom(BorderStyle.THIN);
+			defaultStyle.setBorderTop(BorderStyle.THIN);
+			defaultStyle.setBorderRight(BorderStyle.THIN);
+			defaultStyle.setBorderLeft(BorderStyle.THIN);
 
 			for (int j = 0; j < model.getColumnCount(); ++j) {
 				cell = row.createCell(j);
 
 				cell.setCellStyle(defaultStyle);
 				
-				//System.err.println("sfdsdf " + i + " " + j + " " + model.getValueAt(i, j));
+				System.err.println("values " + i + " " + j + " " + model.getValueAt(i, j));
 		
-				String value = model.getValueAt(i, j).toString();
+				Object o = model.getValueAt(i, j);
+				
+				String value = o != null ? o.toString() : TextUtils.EMPTY_STRING;
 
 				value = !value.equals("NaN") ? value : TextUtils.EMPTY_STRING;
 
-				if (!value.equals("")) {
+				if (!value.equals(TextUtils.EMPTY_STRING)) {
 					switch(j) {
 					case 5:
 					case 6:
@@ -733,6 +734,30 @@ public class MainOrdersWindow extends ModernRibbonWindow implements ModernClickL
 		
 		return cost;
 	}
+	
+	/**
+	 * Parse a column that may have alternative names since Quartzy has a
+	 * bad habit of constantly changing the format and names in their
+	 * export tables.
+	 * 
+	 * @param model
+	 * @param row
+	 * @param names
+	 * @return
+	 */
+	private static String parseText(ModernDataModel model, 
+			int row,
+			String... names) {
+		for (String name : names) {
+			String v = model.getValueAsString(row, name);
+			
+			if (v != null) {
+				return v;
+			}
+		}
+		
+		return null;
+	}
 
 	private static double parseCost(String text) {
 		if (text == null) {
@@ -754,10 +779,10 @@ public class MainOrdersWindow extends ModernRibbonWindow implements ModernClickL
 		}
 	}
 	
-	private static int parseQuantity(ModernDataModel model, 
+	private static double parseQuantity(ModernDataModel model, 
 			int row,
 			String... names) {
-		int cost = 0;
+		double cost = 0;
 		
 		for (String name : names) {
 			String v = model.getValueAsString(row, name);
@@ -771,8 +796,8 @@ public class MainOrdersWindow extends ModernRibbonWindow implements ModernClickL
 		return cost;
 	}
 
-	private static int parseQuantity(String text) {
-		return TextUtils.parseInt(text);
+	private static double parseQuantity(String text) {
+		return Double.parseDouble(text); //TextUtils.parseDouble(text);
 	}
 
 	private List<Order> sortOrdersByVendor(List<Order> orders) {
