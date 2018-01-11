@@ -1,7 +1,5 @@
 package edu.columbia.rdf.orders.app;
 
-
-
 import java.awt.FontFormatException;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -16,30 +14,27 @@ import org.jebtk.core.io.PathUtils;
 import org.jebtk.modern.UI;
 import org.jebtk.modern.theme.ThemeService;
 
-
-
-
 public class MainOrders {
-	private static final Path EXCEL_PATHS_FILE = 
-			PathUtils.getPath("excel_paths.txt");
+  private static final Path EXCEL_PATHS_FILE = PathUtils
+      .getPath("excel_paths.txt");
 
-	public static final void main(String[] args) throws FontFormatException, IOException, ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException {
-		AppService.getInstance().setAppInfo("orders");
-		
-		ThemeService.getInstance().setTheme();
-		
-		
-		// Read the excel paths
-		
-		List<String> excelPaths = Io.getLines(EXCEL_PATHS_FILE);
-		
+  public static final void main(String[] args) throws FontFormatException,
+      IOException, ClassNotFoundException, InstantiationException,
+      IllegalAccessException, UnsupportedLookAndFeelException {
+    AppService.getInstance().setAppInfo("orders");
 
-		OrdersInfo info = new OrdersInfo();
-		
-		JFrame window = new MainOrdersWindow(info, excelPaths);
+    ThemeService.getInstance().setTheme();
 
-		UI.centerWindowToScreen(window);
+    // Read the excel paths
 
-		window.setVisible(true);
-	}
+    List<String> excelPaths = Io.getLines(EXCEL_PATHS_FILE);
+
+    OrdersInfo info = new OrdersInfo();
+
+    JFrame window = new MainOrdersWindow(info, excelPaths);
+
+    UI.centerWindowToScreen(window);
+
+    window.setVisible(true);
+  }
 }
