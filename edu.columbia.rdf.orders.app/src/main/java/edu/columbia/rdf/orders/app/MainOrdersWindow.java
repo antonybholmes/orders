@@ -639,12 +639,7 @@ public class MainOrdersWindow extends ModernRibbonWindow
           case 6:
           case 7:
           case 8:
-            try {
-              cell.setCellValue(TextUtils.parseDouble(value));
-            } catch (ParseException e) {
-              cell.setCellValue(new XSSFRichTextString(value));
-            }
-
+            cell.setCellValue(TextUtils.parseDouble(value));
             break;
           default:
             cell.setCellValue(new XSSFRichTextString(value));
@@ -759,11 +754,7 @@ public class MainOrdersWindow extends ModernRibbonWindow
       return 0;
     }
 
-    try {
-      return TextUtils.parseDouble(matcher.group(1));
-    } catch (ParseException e) {
-      return 0;
-    }
+    return TextUtils.parseDouble(matcher.group(1));
   }
 
   private static double parseQuantity(ModernDataModel model,
