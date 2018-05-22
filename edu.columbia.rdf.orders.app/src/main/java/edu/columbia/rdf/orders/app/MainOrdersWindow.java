@@ -41,7 +41,7 @@ import org.jebtk.math.external.microsoft.Excel;
 import org.jebtk.math.matrix.MatrixType;
 import org.jebtk.math.ui.external.microsoft.ExcelUI;
 import org.jebtk.modern.UI;
-import org.jebtk.modern.UIService;
+import org.jebtk.modern.AssetService;
 import org.jebtk.modern.button.ModernButtonWidget;
 import org.jebtk.modern.clipboard.ClipboardRibbonSection;
 import org.jebtk.modern.dataview.ModernDataModel;
@@ -135,14 +135,14 @@ public class MainOrdersWindow extends ModernRibbonWindow
     getRibbonMenu().addClickListener(this);
 
     ModernButtonWidget button = new QuickAccessButton(
-        UIService.getInstance().loadIcon(QuickOpenVectorIcon.class, 16));
+        AssetService.getInstance().loadIcon(QuickOpenVectorIcon.class, 16));
     button.setClickMessage(UI.MENU_OPEN);
     button.setToolTip(new ModernToolTip("Open", "Open a file."));
     button.addClickListener(this);
     getRibbon().addQuickAccessButton(button);
 
     button = new QuickAccessButton(
-        UIService.getInstance().loadIcon(QuickSaveVectorIcon.class, 16));
+        AssetService.getInstance().loadIcon(QuickSaveVectorIcon.class, 16));
     button.setClickMessage(UI.MENU_SAVE);
     button.setToolTip(new ModernToolTip("Save", "Save the current file."));
     button.addClickListener(this);
@@ -151,7 +151,7 @@ public class MainOrdersWindow extends ModernRibbonWindow
     getRibbon().getToolbar("Home").add(new ClipboardRibbonSection(getRibbon()));
 
     button = new RibbonLargeButton("Create", "Report",
-        UIService.getInstance().loadIcon(RunVectorIcon.class, 24));
+        AssetService.getInstance().loadIcon(RunVectorIcon.class, 24));
     button.setToolTip(new ModernToolTip("Create Report",
         "Create a report from the Quartzy report."));
     button.addClickListener(this);
