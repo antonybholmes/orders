@@ -2,4 +2,7 @@
 <settings>
 	<setting name="orders.help.type" value="remote" />
 	<setting name="orders.help.url" value="http://156.145.232.159/" />
+	
+	<setting name="lab.stocks.file" value="res/lab_stocks.txt"/>
+	<setting name="orders.duplicates.color" value="#FF0000"/>
 </settings>

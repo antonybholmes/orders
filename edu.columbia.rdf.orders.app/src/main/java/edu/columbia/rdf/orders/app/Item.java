@@ -5,10 +5,10 @@ public class Item implements Comparable<Item> {
   private String mCatalog;
   private String mVendor;
 
-  public Item(String name, String vendor, String catalog) {
+  public Item(String catalog, String name, String vendor) {
+    mCatalog = catalog;
     mName = name;
     mVendor = vendor;
-    mCatalog = catalog;
   }
 
   public String getVendor() {

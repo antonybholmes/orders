@@ -16,7 +16,7 @@ public class Order extends Item {
   public Order(String name, String vendor, String catalog, String type,
       String verifiedType, String unitSize, double unitPrice, double quantity,
       double total, double shipping, String from, Date date) {
-    super(name, vendor, catalog);
+    super(catalog, name, vendor);
 
     mType = type;
     mVerifiedType = verifiedType;

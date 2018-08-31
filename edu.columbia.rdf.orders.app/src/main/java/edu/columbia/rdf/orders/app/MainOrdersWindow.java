@@ -35,6 +35,7 @@ import org.jebtk.core.io.FileUtils;
 import org.jebtk.core.io.Io;
 import org.jebtk.core.io.PathUtils;
 import org.jebtk.core.io.Temp;
+import org.jebtk.core.settings.SettingsService;
 import org.jebtk.core.sys.ExternalProcess;
 import org.jebtk.core.text.TextUtils;
 import org.jebtk.math.external.microsoft.Excel;
@@ -76,10 +77,11 @@ public class MainOrdersWindow extends ModernRibbonWindow
     implements ModernClickListener {
   private static final long serialVersionUID = 1L;
 
-  private static final XSSFColor DUPLICATE_COLOR = new XSSFColor(Color.RED);
+  private static final XSSFColor DUPLICATE_COLOR = new XSSFColor(
+      SettingsService.getInstance().getColor("orders.duplicates.color")); // Color.RED);
 
-  private static final Path STOCKS_FILE = PathUtils
-      .getPath("res/lab_stocks.txt");
+  private static final Path STOCKS_FILE = SettingsService.getInstance()
+      .getFile("lab.stocks.file");
 
   private Path mFile = null;
 
@@ -166,6 +168,7 @@ public class MainOrdersWindow extends ModernRibbonWindow
     getStatusBar().addRight(new ModernStatusZoomSlider(mZoomModel));
   }
 
+  @Override
   public final void clicked(ModernClickEvent e) {
     if (e.getMessage().equals(UI.MENU_OPEN)
         || e.getMessage().equals(UI.MENU_BROWSE)) {
@@ -212,10 +215,8 @@ public class MainOrdersWindow extends ModernRibbonWindow
       }
     } else if (e.getMessage().equals(UI.MENU_ABOUT)) {
       ModernAboutDialog.show(this, getAppInfo());
-    } else if (e.getMessage().equals(UI.MENU_EXIT)) {
-      close();
     } else {
-      // chooseFile(new File(e.getMessage()));
+      close();
     }
   }
 
@@ -331,10 +332,11 @@ public class MainOrdersWindow extends ModernRibbonWindow
 
       Order order = new Order(parseText(model, i, "Name"),
           parseText(model, i, "Vendor"), catalog, type, type,
-          parseText(model, i, "Unit Size"), parseCost(model, i, "Unit Price"),
+          parseText(model, i, "Unit Size"),
+          parseQuantity(model, i, "Unit Price"),
           parseQuantity(model, i, "Quantity", "Qty"),
-          parseCost(model, i, "Total Price"),
-          parseCost(model, i, "S&H", "Shipping & Handling"), from,
+          parseQuantity(model, i, "Total Price"),
+          parseQuantity(model, i, "S&H", "Shipping & Handling"), from,
           sdf.parse(parseText(model, i, "Date Submitted", "Date Requested")));
 
       orders.add(order);
@@ -398,8 +400,20 @@ public class MainOrdersWindow extends ModernRibbonWindow
       // Price\tQuantity\tTotal Price\tS&H\tDate Submitted\tApproved By\tDate
       // Ordered\tDate Received\tOrder Processed By\tOrder No.\tTransaction
       // Date\tInvoice No.\tProject No. Charged");
-      writer.write(
-          "Vendor\tCatalog\tName\tFrom\tType\tUnit Price\tQuantity\tTotal Price\tS&H\tDate Submitted\tApproved By\tDate Ordered\tDate Received");
+      Io.join(writer,
+          "Vendor",
+          "Catalog",
+          "Name",
+          "From",
+          "Type",
+          "Unit Price",
+          "Qty",
+          "Total Price",
+          "S&H",
+          "Date Submitted",
+          "Approved By",
+          "Date Ordered",
+          "Date Received");
       writer.newLine();
 
       //
@@ -420,21 +434,18 @@ public class MainOrdersWindow extends ModernRibbonWindow
         writeOrder(order, writer);
       }
 
+      // writer.newLine();
+
+      Io.tabIndent(writer, "Shipping", 4);
+      Io.tabIndent(writer, costFormatter.format((shipping)), 3);
+      writer.newLine();
+      Io.tabIndent(writer, "Sub Total", 4);
+      Io.tabIndent(writer, costFormatter.format((subTotal)), 3);
+      writer.newLine();
+      Io.tabIndent(writer, "Total", 4);
+      Io.tabIndent(writer, costFormatter.format(total), 3);
       writer.newLine();
 
-      writer.write("\t\t\t\t\t\tShipping\t");
-      writer.write(costFormatter.format((shipping)));
-      writer.newLine();
-      writer.write("\t\t\t\t\t\tSub Total\t");
-      writer.write(costFormatter.format((subTotal)));
-      writer.newLine();
-      writer.write("\t\t\t\t\t\tTotal\t");
-      writer.write(costFormatter.format(total));
-      // writer.write(TextUtils.repeat(TextUtils.TAB_DELIMITER, 9));
-      writer.newLine();
-      // writer.write(TextUtils.repeat(TextUtils.TAB_DELIMITER, 9));
-      // writer.newLine();
-      // writer.newLine();
     } finally {
       writer.close();
     }
@@ -442,6 +453,7 @@ public class MainOrdersWindow extends ModernRibbonWindow
     // Open with excel
 
     Path tempExcelFile = createExcelFile(tempFile,
+        sortedOrders,
         duplicateMap,
         colorMap,
         minDate,
@@ -471,36 +483,23 @@ public class MainOrdersWindow extends ModernRibbonWindow
     // Vendor\tCatalog\tName\tFrom\tType\tQuantity\tUnit Size\tUnit
     // Price\tQuantity\tTotal Price\tS&H\tDate Submitted\t
 
-    writer.write(order.getVendor());
-    writer.write(TextUtils.TAB_DELIMITER);
-    writer.write(order.getCatalog());
-    writer.write(TextUtils.TAB_DELIMITER);
-    writer.write(order.getName());
-    writer.write(TextUtils.TAB_DELIMITER);
-    writer.write(order.getFrom());
-    writer.write(TextUtils.TAB_DELIMITER);
-    writer.write(order.getVerifiedType());
-    // writer.write(TextUtils.TAB_DELIMITER);
-    // writer.write(order.getUnitSize());
-    writer.write(TextUtils.TAB_DELIMITER);
-    writer.write(Double.toString(order.getUnitPrice()));
-    writer.write(TextUtils.TAB_DELIMITER);
-    writer.write(Double.toString(order.getQuantity()));
-    writer.write(TextUtils.TAB_DELIMITER);
-    writer.write(Double.toString(order.getTotal()));
-    writer.write(TextUtils.TAB_DELIMITER);
-    writer.write(Double.toString(order.getShipping()));
-    writer.write(TextUtils.TAB_DELIMITER);
-
-    SimpleDateFormat sdf = new SimpleDateFormat("M/dd/yy");
-    String date = sdf.format(order.getDate());
-
-    writer.write(date);
+    Io.join(writer,
+        order.getVendor(),
+        order.getCatalog(),
+        order.getName(),
+        order.getFrom(),
+        order.getVerifiedType(),
+        Double.toString(order.getUnitPrice()),
+        Double.toString(order.getQuantity()),
+        Double.toString(order.getTotal()),
+        Double.toString(order.getShipping()),
+        new SimpleDateFormat("M/dd/yy").format(order.getDate()));
 
     writer.newLine();
   }
 
   private Path createExcelFile(Path file,
+      List<Order> orders,
       Map<String, Boolean> duplicateColorMap,
       Map<String, XSSFColor> colorMap,
       Date minDate,
@@ -541,8 +540,8 @@ public class MainOrdersWindow extends ModernRibbonWindow
     // and use that instead
     // font.setColor(new XSSFColor(new Color(1, 1, 1)));
 
-    XSSFCellStyle dateStyle = workbook.createCellStyle();
-    dateStyle.setFont(boldFont);
+    XSSFCellStyle boldStyle = workbook.createCellStyle();
+    boldStyle.setFont(boldFont);
 
     XSSFRow row;
     XSSFCell cell;
@@ -554,14 +553,17 @@ public class MainOrdersWindow extends ModernRibbonWindow
     row = (XSSFRow) sheet.createRow(r++);
 
     cell = row.createCell(0);
-    cell.setCellStyle(dateStyle);
+    cell.setCellStyle(boldStyle);
     cell.setCellValue("Order dates");
     cell = row.createCell(1);
-    cell.setCellStyle(dateStyle);
+    cell.setCellStyle(boldStyle);
     cell.setCellValue(sdf.format(minDate));
     cell = row.createCell(2);
-    cell.setCellStyle(dateStyle);
+    cell.setCellStyle(boldStyle);
     cell.setCellValue(sdf.format(maxDate));
+    cell = row.createCell(3);
+    cell.setCellStyle(boldStyle);
+    cell.setCellValue("(1-" + orders.size() + ")");
 
     Excel.createEmptyColumns(10, row);
 
@@ -610,6 +612,7 @@ public class MainOrdersWindow extends ModernRibbonWindow
         font.setColor(DUPLICATE_COLOR);
       }
 
+      // Style required to account for font colors etc
       XSSFCellStyle defaultStyle = workbook.createCellStyle();
       defaultStyle.setFont(font);
 
@@ -624,14 +627,14 @@ public class MainOrdersWindow extends ModernRibbonWindow
 
         cell.setCellStyle(defaultStyle);
 
-        System.err
-            .println("values " + i + " " + j + " " + model.getValueAt(i, j));
-
         Object o = model.getValueAt(i, j);
 
         String value = o != null ? o.toString() : TextUtils.EMPTY_STRING;
 
         value = !value.equals("NaN") ? value : TextUtils.EMPTY_STRING;
+
+        // System.err.println("values " + i + " " + j + " " +
+        // model.getValueAt(i, j) + " " + value.equals(TextUtils.EMPTY_STRING));
 
         if (!value.equals(TextUtils.EMPTY_STRING)) {
           switch (j) {
@@ -646,7 +649,7 @@ public class MainOrdersWindow extends ModernRibbonWindow
             break;
           }
         } else {
-          cell.setCellValue(new XSSFRichTextString(""));
+          cell.setCellValue(new XSSFRichTextString(TextUtils.EMPTY_STRING));
         }
       }
     }
@@ -680,16 +683,15 @@ public class MainOrdersWindow extends ModernRibbonWindow
     // mPreviewPanel.addPreview(PathUtils.toString(file.toAbsolutePath()),
     // new PreviewTablePanel(model, mZoomModel));
 
-    MainOrdersWindow window = new MainOrdersWindow(getAppInfo(),
-        this.mExcelPaths, excelFile);
+    MainOrdersWindow window = new MainOrdersWindow(getAppInfo(), mExcelPaths,
+        excelFile);
 
     window.setVisible(true);
 
     return excelFile;
   }
 
-  private List<Order> processByType(List<Order> orders, String type)
-      throws ParseException {
+  private List<Order> processByType(List<Order> orders, String type) {
     List<Order> ret = new ArrayList<Order>();
 
     for (Order order : orders) {
@@ -699,23 +701,6 @@ public class MainOrdersWindow extends ModernRibbonWindow
     }
 
     return sortOrdersByVendor(ret);
-  }
-
-  private static double parseCost(ModernDataModel model,
-      int row,
-      String... names) {
-    double cost = 0;
-
-    for (String name : names) {
-      String v = model.getValueAsString(row, name);
-
-      if (v != null) {
-        cost = parseCost(v);
-        break;
-      }
-    }
-
-    return cost;
   }
 
   /**
@@ -730,15 +715,20 @@ public class MainOrdersWindow extends ModernRibbonWindow
   private static String parseText(ModernDataModel model,
       int row,
       String... names) {
-    for (String name : names) {
-      String v = model.getValueAsString(row, name);
 
-      if (v != null) {
-        return v;
-      }
+    int col = findHeading(model, names);
+
+    String v = null;
+
+    if (col != -1) {
+      v = model.getValueAsString(row, col);
     }
 
-    return null;
+    if (TextUtils.isNullOrEmpty(v)) {
+      v = TextUtils.EMPTY_STRING;
+    }
+
+    return v;
   }
 
   private static double parseCost(String text) {
@@ -750,11 +740,11 @@ public class MainOrdersWindow extends ModernRibbonWindow
 
     Matcher matcher = pattern.matcher(text);
 
-    if (!matcher.find()) {
+    if (matcher.find()) {
+      return TextUtils.parseDouble(matcher.group(1));
+    } else {
       return 0;
     }
-
-    return TextUtils.parseDouble(matcher.group(1));
   }
 
   private static double parseQuantity(ModernDataModel model,
@@ -762,20 +752,33 @@ public class MainOrdersWindow extends ModernRibbonWindow
       String... names) {
     double cost = 0;
 
-    for (String name : names) {
-      String v = model.getValueAsString(row, name);
+    int col = findHeading(model, names);
 
-      if (v != null) {
+    if (col != -1) {
+      String v = model.getValueAsString(row, col);
+
+      if (!TextUtils.isNullOrEmpty(v)) {
         cost = parseQuantity(v);
-        break;
       }
     }
 
     return cost;
   }
 
+  private static int findHeading(ModernDataModel model, String... names) {
+    for (String name : names) {
+      int i = model.getHeadingIndex(name);
+
+      if (i != -1) {
+        return i;
+      }
+    }
+
+    return -1;
+  }
+
   private static double parseQuantity(String text) {
-    return Double.parseDouble(text); // TextUtils.parseDouble(text);
+    return TextUtils.parseDouble(text);
   }
 
   private List<Order> sortOrdersByVendor(List<Order> orders) {
@@ -788,8 +791,8 @@ public class MainOrdersWindow extends ModernRibbonWindow
 
       orderMap.get(order.getVendor()).add(order);
 
-      System.err.println(
-          order.getCatalog() + " " + orderMap.get(order.getVendor()).size());
+      //System.err.println(
+      //    order.getCatalog() + " " + orderMap.get(order.getVendor()).size());
     }
 
     // sort orders
@@ -801,7 +804,7 @@ public class MainOrdersWindow extends ModernRibbonWindow
     for (String vendor : sortedVendors) {
       // Collections.sort(orderMap.get(vendor));
 
-      System.err.println(vendor);
+      //System.err.println(vendor);
 
       List<Order> sortedByFrom = sortOrdersByFrom(orderMap.get(vendor));
 
@@ -820,8 +823,8 @@ public class MainOrdersWindow extends ModernRibbonWindow
     for (Order order : orders) {
       orderMap.get(order.getVendor()).add(order);
 
-      System.err.println(
-          order.getCatalog() + " " + orderMap.get(order.getVendor()).size());
+      //System.err.println(
+       //   order.getCatalog() + " " + orderMap.get(order.getVendor()).size());
     }
 
     // sort orders
@@ -858,6 +861,12 @@ public class MainOrdersWindow extends ModernRibbonWindow
     return ret;
   }
 
+  /**
+   * Load a set of stocks from file. We are mostly interested in the catalog
+   * number.
+   * 
+   * @throws IOException
+   */
   private void loadLabStocks() throws IOException {
     mInventory = new HashMap<String, Item>();
 
@@ -878,7 +887,25 @@ public class MainOrdersWindow extends ModernRibbonWindow
 
         tokens = TextUtils.tabSplit(line);
 
-        Item item = new Item(tokens.get(0), tokens.get(1), tokens.get(2));
+        String catalog = tokens.get(0);
+
+        String name;
+
+        if (tokens.size() > 1) {
+          name = tokens.get(1);
+        } else {
+          name = catalog;
+        }
+
+        String vendor;
+
+        if (tokens.size() > 2) {
+          vendor = tokens.get(2);
+        } else {
+          vendor = catalog;
+        }
+
+        Item item = new Item(catalog, name, vendor);
 
         mInventory.put(item.getCatalog(), item);
       }

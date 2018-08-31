@@ -7,7 +7,7 @@ import org.jebtk.modern.help.GuiAppInfo;
 public class OrdersInfo extends GuiAppInfo {
 
   public OrdersInfo() {
-    super("Orders", new AppVersion(7),
+    super("Orders", new AppVersion(8),
         "Copyright (C) 2014-${year} Antony Holmes",
         AssetService.getInstance().loadIcon(OrdersIcon.class, 32),
         AssetService.getInstance().loadIcon(OrdersIcon.class, 128));
