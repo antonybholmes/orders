@@ -379,7 +379,7 @@ public class MainOrdersWindow extends ModernRibbonWindow
     List<Order> sortedOrders = sortOrdersByVendor(orders);
 
     // ensure the temp directory exists
-    Path tempFile = Temp.generateTempFile("txt");
+    Path tempFile = TmpService.getInstance().newTmpFile("txt");
 
     DecimalFormat costFormatter = new DecimalFormat("0.00");
 
@@ -505,7 +505,7 @@ public class MainOrdersWindow extends ModernRibbonWindow
       Date minDate,
       Date maxDate,
       SimpleDateFormat sdf) throws IOException, InvalidFormatException {
-    Path excelFile = Temp.generateTempFile("xlsx");
+    Path excelFile = TmpService.getInstance().newTmpFile("xlsx");
 
     // Open as generic model
     ModernDataModel model = Bioinformatics.getModel(file,
@@ -917,7 +917,7 @@ public class MainOrdersWindow extends ModernRibbonWindow
 
   @Override
   public void close() {
-    Temp.deleteTempFiles();
+    TmpService.getInstance().deleteTempFiles();
 
     super.close();
   }
