@@ -34,15 +34,15 @@ import org.jebtk.core.collections.DefaultHashMap;
 import org.jebtk.core.io.FileUtils;
 import org.jebtk.core.io.Io;
 import org.jebtk.core.io.PathUtils;
-import org.jebtk.core.io.Temp;
+import org.jebtk.core.io.TmpService;
 import org.jebtk.core.settings.SettingsService;
 import org.jebtk.core.sys.ExternalProcess;
 import org.jebtk.core.text.TextUtils;
 import org.jebtk.math.external.microsoft.Excel;
 import org.jebtk.math.matrix.MatrixType;
 import org.jebtk.math.ui.external.microsoft.ExcelUI;
-import org.jebtk.modern.UI;
 import org.jebtk.modern.AssetService;
+import org.jebtk.modern.UI;
 import org.jebtk.modern.button.ModernButtonWidget;
 import org.jebtk.modern.clipboard.ClipboardRibbonSection;
 import org.jebtk.modern.dataview.ModernDataModel;
@@ -215,8 +215,10 @@ public class MainOrdersWindow extends ModernRibbonWindow
       }
     } else if (e.getMessage().equals(UI.MENU_ABOUT)) {
       ModernAboutDialog.show(this, getAppInfo());
-    } else {
+    } else if (e.getMessage().equals(UI.MENU_EXIT)) {
       close();
+    } else {
+      // Do nothing
     }
   }
 
@@ -235,7 +237,7 @@ public class MainOrdersWindow extends ModernRibbonWindow
     }
 
     mModel = Bioinformatics.getModel(file,
-        true,
+        1,
         TextUtils.emptyList(),
         0,
         TextUtils.TAB_DELIMITER,
@@ -509,7 +511,7 @@ public class MainOrdersWindow extends ModernRibbonWindow
 
     // Open as generic model
     ModernDataModel model = Bioinformatics.getModel(file,
-        true,
+        1,
         TextUtils.emptyList(),
         0,
         TextUtils.TAB_DELIMITER,
@@ -583,7 +585,7 @@ public class MainOrdersWindow extends ModernRibbonWindow
 
     row = (XSSFRow) sheet.createRow(r++);
 
-    for (int i = 0; i < model.getColumnCount(); ++i) {
+    for (int i = 0; i < model.getColCount(); ++i) {
       cell = row.createCell(i);
 
       cell.setCellStyle(headerStyle);
@@ -622,7 +624,7 @@ public class MainOrdersWindow extends ModernRibbonWindow
       defaultStyle.setBorderRight(BorderStyle.THIN);
       defaultStyle.setBorderLeft(BorderStyle.THIN);
 
-      for (int j = 0; j < model.getColumnCount(); ++j) {
+      for (int j = 0; j < model.getColCount(); ++j) {
         cell = row.createCell(j);
 
         cell.setCellStyle(defaultStyle);
@@ -654,7 +656,7 @@ public class MainOrdersWindow extends ModernRibbonWindow
       }
     }
 
-    for (int i = 0; i < model.getColumnCount(); ++i) {
+    for (int i = 0; i < model.getColCount(); ++i) {
       sheet.setColumnWidth(i, 256 * 18);
     }
 
@@ -674,7 +676,7 @@ public class MainOrdersWindow extends ModernRibbonWindow
     Excel.writeXlsx(workbook, excelFile);
 
     model = Bioinformatics.getModel(excelFile,
-        true,
+        1,
         TextUtils.emptyList(),
         0,
         TextUtils.TAB_DELIMITER,
