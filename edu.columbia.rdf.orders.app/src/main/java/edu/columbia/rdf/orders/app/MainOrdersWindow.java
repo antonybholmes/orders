@@ -70,7 +70,7 @@ import org.jebtk.modern.zoom.ZoomModel;
 /**
  * Minimal Common Regions.
  *
- * @author Antony Holmes Holmes
+ * @author Antony Holmes
  *
  */
 public class MainOrdersWindow extends ModernRibbonWindow
